@@ -1,0 +1,11 @@
+{
+  "name": "netprobe-lab",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "node server/index.js",
+    "build": "npm run build --prefix client",
+    "start": "node server/index.js"
+  }
+}

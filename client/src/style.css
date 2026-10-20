@@ -1,0 +1,22 @@
+:root {
+  --bg: #061018;
+  --panel: #0b1822;
+  --line: #1a3344;
+  --text: #e5f4ff;
+  --muted: #7fa0b5;
+  --faint: #4f6b7d;
+  --mint: #3dffa8;
+  --cyan: #4ec4ff;
+  --font: 'Outfit', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); }
+body {
+  background:
+    radial-gradient(800px 420px at 80% -10%, rgba(78,196,255,.1), transparent 50%),
+    radial-gradient(600px 360px at 10% 100%, rgba(61,255,168,.06), transparent 45%),
+    var(--bg);
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; }
