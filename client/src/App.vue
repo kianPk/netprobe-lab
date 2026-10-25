@@ -9,6 +9,8 @@ const cidr = ref('192.168.10.0/24')
 const dnsResult = ref(null)
 const tcpResult = ref(null)
 const cidrResult = ref(null)
+const traceHost = ref('cloudflare.com')
+const traceResult = ref(null)
 const latency = ref([])
 const busy = ref(false)
 const err = ref('')
@@ -118,6 +120,24 @@ async function runCidr() {
   }
 }
 
+function runTrace() {
+  err.value = ''
+  const h = traceHost.value.trim() || host.value
+  if (!ALLOW.includes(h) && !ALLOW.some((a) => h.endsWith('.' + a))) {
+    err.value = 'Host not on lab allowlist'
+    return
+  }
+  const labels = ['your-gateway', 'isp-core', 'ix-peer', 'cdn-edge', h]
+  const hops = labels.map((label, i) => ({
+    hop: i + 1,
+    host: label,
+    ip: i === labels.length - 1 ? '104.16.132.229' : `203.0.113.${10 + i}`,
+    rttMs: 4 + i * 7 + Math.floor(Math.random() * 6),
+  }))
+  traceResult.value = { target: h, mode: 'simulated', hops, at: Date.now() }
+  mode.value = 'demo'
+}
+
 async function runLatency() {
   busy.value = true
   err.value = ''
@@ -162,6 +182,7 @@ const allowLabel = computed(() => ALLOW.join(' · '))
       <button type="button" :class="{ on: tab === 'dns' }" @click="tab = 'dns'">DNS</button>
       <button type="button" :class="{ on: tab === 'tcp' }" @click="tab = 'tcp'">TCP check</button>
       <button type="button" :class="{ on: tab === 'cidr' }" @click="tab = 'cidr'">CIDR</button>
+      <button type="button" :class="{ on: tab === 'trace' }" @click="tab = 'trace'">Traceroute</button>
       <button type="button" :class="{ on: tab === 'lat' }" @click="tab = 'lat'">Latency</button>
     </nav>
 
@@ -207,6 +228,24 @@ const allowLabel = computed(() => ALLOW.join(' · '))
       <button class="primary" type="button" @click="runCidr">Calculate</button>
       <div v-if="cidrResult" class="cidr-grid">
         <div v-for="(v, k) in cidrResult" :key="k"><span>{{ k }}</span><b>{{ v }}</b></div>
+      </div>
+    </section>
+
+    <section v-else-if="tab === 'trace'" class="panel">
+      <label>
+        Target host
+        <input v-model="traceHost" list="hosts" />
+      </label>
+      <p class="hint">Simulated hop path for demo — not a raw ICMP trace.</p>
+      <button class="primary" type="button" @click="runTrace">Run trace</button>
+      <div v-if="traceResult" class="trace">
+        <p class="trace-head"><code>{{ traceResult.target }}</code> · {{ traceResult.mode }}</p>
+        <div v-for="h in traceResult.hops" :key="h.hop" class="trace-row">
+          <b>{{ h.hop }}</b>
+          <span>{{ h.host }}</span>
+          <code>{{ h.ip }}</code>
+          <em>{{ h.rttMs }} ms</em>
+        </div>
       </div>
     </section>
 
@@ -313,6 +352,15 @@ pre {
 .lat-row b { font-family: var(--mono); color: var(--mint); }
 .lat-row b[data-ok='false'] { color: #ff7b8a; }
 .err { color: #ff7b8a; margin: 0; }
+.trace { display: grid; gap: 6px; }
+.trace-head { margin: 0; font-size: .82rem; color: var(--muted); }
+.trace-row {
+  display: grid; grid-template-columns: 28px 1fr 1.2fr auto; gap: 8px; align-items: center;
+  padding: 8px 10px; border-radius: 10px; background: #07131c; border: 1px solid var(--line);
+  font-size: .8rem;
+}
+.trace-row code, .trace-row em { font-family: var(--mono); font-size: .72rem; }
+.trace-row em { color: var(--mint); font-style: normal; }
 footer { color: var(--faint); font-size: .78rem; }
 @media (max-width: 640px) {
   .row2, .cidr-grid { grid-template-columns: 1fr; }
